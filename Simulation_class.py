@@ -17,15 +17,18 @@ class BaseSimulation:
         """
         Path_to_input_data is the relative path to input data
         **kwargs can contain any of the following parameters (if not specified, they take default values):
-         - shelf life m
-         - cost of shortage u
-         - cost of waste w
-         - safety factor z
+         - shelf life m (type int)
+         - cost of shortage u (type int)
+         - cost of waste w (type int)
+         - safety factor z (type int)
         """
+        # Check whether the kw args dict contains only integer values
+        assert all((type(value) == int for value in kwargs.values())), 'All kwargs must have integer values'
 
         self.path_to_input_data = path_to_input_data
+        self._run_flag = False  # Flag var for the simulation having ran
 
-        # Setting the default parameter values for m, w, u and z
+        # Setting the default parameter values for w, u and z
         self._m = kwargs.get('m', 5)
         self._u = kwargs.get('u', 500)
         self._w = kwargs.get('w', 100)
@@ -35,7 +38,6 @@ class BaseSimulation:
         self.shortage_pct = 0
         self.waste_pct = 0
         self.daily_costs = 0
-        return
 
     def prepare_data(self):
         """
@@ -53,7 +55,6 @@ class BaseSimulation:
                            'Rainfall in 24h in 0.1mm': 'precipitation',
                            }, inplace=True)
         self._data = df
-        return
 
     def run(self):
         """
@@ -132,7 +133,9 @@ class BaseSimulation:
             today_short = 0  # Reset today_short to 0 again as it's not always assigned
 
             I.append(q) # Add newly ordered goods to inventory as newest products (on the right)
-        return
+        
+        # If the simulation has ran, set the run flag to True
+        self._run_flag = True
 
     def print_results(self):
         """
@@ -149,8 +152,6 @@ class BaseSimulation:
             print(json.dumps(result_stats, indent=3))
         except AttributeError:
             print("First run simulation before printing results")
-
-        return
 
 class MovingAvgSim(BaseSimulation):
     """
@@ -174,7 +175,6 @@ class MovingAvgSim(BaseSimulation):
         # used for computing historical demand
         self._data['demand_pred'] = round((self._data[col_names[0]] + self._data[col_names[1]]) / len(t))
         del self._data[col_names[0]], self._data[col_names[1]] # Drop the columns again
-        return
 
 class XGBSim(BaseSimulation):
     """Implementation for the ML based simulation. Inherit from BaseSimulation class. 
@@ -211,7 +211,6 @@ class XGBSim(BaseSimulation):
 
         self._model = load_trained_xgb_regressor()
         self._data['demand_pred'] = self._model.predict(self._data.drop(['Date', 'demand'], axis=1))
-        return
 
 MA_sim = MovingAvgSim(
     path_to_input_data='../data/MergedData2017.xlsx')
