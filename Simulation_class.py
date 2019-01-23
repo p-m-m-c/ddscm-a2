@@ -39,6 +39,20 @@ class BaseSimulation:
         self.waste_pct = 0
         self.daily_costs = 0
 
+    @property
+    def m(self):
+        """Getter method for _m"""
+        return self._m
+
+    @m.setter
+    def m(self, new_value):
+        """Setter method for m: depends on whether simulation has ran already"""
+        if self._run_flag == True:
+            raise ValueError('m cannot be modified after the simulation has ran')
+        else:
+            print("setting m")
+            self._m = new_value
+
     def prepare_data(self):
         """
         Prepare the data into a pandas DataFrame for further
@@ -73,7 +87,7 @@ class BaseSimulation:
             rmse = math.sqrt(np.mean(squared_errors))
             return round(d + z * rmse)
 
-        I = deque(5 * [0])  # Initialise inventory deque of only 0s
+        I = deque(self.m * [0])  # Initialise inventory deque of only 0s
         self._Twarm = 14  # Number of warmup days
         self._TotOrdered = 0  # Initialise total ordered
         self._TotDemand = 0  # Initialise total demand
@@ -216,8 +230,11 @@ MA_sim = MovingAvgSim(
     path_to_input_data='../data/MergedData2017.xlsx')
 MA_sim.prepare_data()
 MA_sim.predict_demand()
+MA_sim.m = 6 # Here we adjust m to be 6
 MA_sim.run()
 MA_sim.print_results()
+MA_sim._m = 9 # Weird that we can still alter this 'hidden' variable
+print(MA_sim.m) # This looks like the result is caused by m being set to 9
 
 ML_sim = XGBSim(
     path_to_input_data='../data/MergedData2017.xlsx')
