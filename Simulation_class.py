@@ -233,8 +233,6 @@ MA_sim.predict_demand()
 MA_sim.m = 6 # Here we adjust m to be 6
 MA_sim.run()
 MA_sim.print_results()
-MA_sim._m = 9 # Weird that we can still alter this 'hidden' variable
-print(MA_sim.m) # This looks like the result is caused by m being set to 9
 
 ML_sim = XGBSim(
     path_to_input_data='../data/MergedData2017.xlsx')
